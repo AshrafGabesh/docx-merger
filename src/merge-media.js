@@ -5,29 +5,25 @@ var DOMParser = require('xmldom').DOMParser;
 
 var prepareMediaFiles = function(files, media) {
 
-       var count = 1;
+    let count = 1;
+    let i = 0;
 
-    files.forEach(function(zip, index) {
-        // var zip = new JSZip(file);
-        var medFiles = zip.folder("word/media").files;
+    for (i = 0; i < files.length; i++) {
+        const zip = files[i];
+        const medFiles = zip.folder("word/media").files;
 
-        for (var mfile in medFiles) {
+        for (let mfile in medFiles) {
             if (/^word\/media/.test(mfile) && mfile.length > 11) {
-                // console.log(mfile);
                 media[count] = {};
                 media[count].oldTarget = mfile;
                 media[count].newTarget = mfile.replace(/[0-9]/, '_' + count).replace('word/', "");
-                media[count].fileIndex = index;
+                media[count].fileIndex = i;
                 updateMediaRelations(zip, count, media);
                 updateMediaContent(zip, count, media);
                 count++;
             }
         }
-    });
-
-    // console.log(JSON.stringify(media));
-
-    // this.updateRelation(files);
+    }
 };
 
 var updateMediaRelations = function(zip, count, _media) {
@@ -64,7 +60,7 @@ var updateMediaRelations = function(zip, count, _media) {
 var updateMediaContent = function(zip, count, _media) {
 
     var xmlString = zip.file("word/document.xml").asText();
-    var xml = new DOMParser().parseFromString(xmlString, 'text/xml');
+    // var xml = new DOMParser().parseFromString(xmlString, 'text/xml');
 
     xmlString = xmlString.replace(new RegExp(_media[count].oldRelID + '"', 'g'), _media[count].oldRelID + '_' + count + '"');
 

@@ -1,20 +1,25 @@
 var XMLSerializer = require('xmldom').XMLSerializer;
 var DOMParser = require('xmldom').DOMParser;
 
-var prepareStyles = function(files, style) {
-    // var self = this;
-    // var style = this._styles;
-    var serializer = new XMLSerializer();
+const domParser = new DOMParser();
 
-    files.forEach(function(zip, index) {
+var prepareStyles = function(files, style) {
+    var serializer = new XMLSerializer();
+    let i = 0;
+
+    for (i = 0; i < files.length; i++) {
+        let zip = files[i];
+        let index = i;
+
         var xmlString = zip.file("word/styles.xml").asText();
-        var xml = new DOMParser().parseFromString(xmlString, 'text/xml');
+        var xml = domParser.parseFromString(xmlString, 'text/xml');
         var nodes = xml.getElementsByTagName('w:style');
 
         for (var node in nodes) {
             if (/^\d+$/.test(node) && nodes[node].getAttribute) {
                 var styleId = nodes[node].getAttribute('w:styleId');
                 nodes[node].setAttribute('w:styleId', styleId + '_' + index);
+
                 var basedonStyle = nodes[node].getElementsByTagName('w:basedOn')[0];
                 if (basedonStyle) {
                     var basedonStyleId = basedonStyle.getAttribute('w:val');
@@ -47,28 +52,27 @@ var prepareStyles = function(files, style) {
         xmlString = xmlString.replace(xmlString.slice(startIndex), serializer.serializeToString(xml.documentElement));
 
         zip.file("word/styles.xml", xmlString);
-        // console.log(nodes);
-    });
+    }
 };
 
 var mergeStyles = function(files, _styles) {
+    let i = 0;
 
-    files.forEach(function(zip) {
-
+    for (i = 0; i < files.length; i++) {
+        let zip = files[i];
         var xml = zip.file("word/styles.xml").asText();
 
         xml = xml.substring(xml.indexOf("<w:style "), xml.indexOf("</w:styles"));
 
         _styles.push(xml);
-
-    });
+    }
 };
 
 var updateStyleRel_Content = function(zip, fileIndex, styleId) {
 
 
     var xmlString = zip.file("word/document.xml").asText();
-    var xml = new DOMParser().parseFromString(xmlString, 'text/xml');
+    // var xml = new DOMParser().parseFromString(xmlString, 'text/xml');
 
     xmlString = xmlString.replace(new RegExp('w:val="' + styleId + '"', 'g'), 'w:val="' + styleId + '_' + fileIndex + '"');
 

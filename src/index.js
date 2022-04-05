@@ -18,9 +18,12 @@ function DocxMerger(options, files) {
     this._pageBreak = typeof options.pageBreak !== 'undefined' ? !!options.pageBreak : true;
     this._files = [];
     var self = this;
-    (files || []).forEach(function(file) {
-        self._files.push(new JSZip(file));
-    });
+    let i = 0;
+
+    for (i = 0; i < (files || []).length; i++) {
+        self._files.push(new JSZip(files[i]));
+    }
+
     this._contentTypes = {};
 
     this._media = {};
@@ -51,24 +54,26 @@ function DocxMerger(options, files) {
         RelContentType.mergeContentTypes(files, this._contentTypes);
         Media.prepareMediaFiles(files, this._media);
         RelContentType.mergeRelations(files, this._rel);
-
         bulletsNumbering.prepareNumbering(files);
         bulletsNumbering.mergeNumbering(files, this._numbering);
-
         Style.prepareStyles(files, this._style);
         Style.mergeStyles(files, this._style);
 
-        files.forEach(function(zip, index) {
-            //var zip = new JSZip(file);
+        let i = 0;
+        for (i = 0; i < files.length; i++) {
+            let zip = files[i];
+            let index = i;
+
             var xml = zip.file("word/document.xml").asText();
             xml = xml.substring(xml.indexOf("<w:body>") + 8);
             xml = xml.substring(0, xml.indexOf("</w:body>"));
             xml = xml.substring(0, xml.lastIndexOf("<w:sectPr"));
 
             self.insertRaw(xml);
-            if (self._pageBreak && index < files.length-1)
+            if (self._pageBreak && index < files.length - 1) {
                 self.insertPageBreak();
-        });
+            }
+        }
     };
 
     this.save = function(type, callback) {
